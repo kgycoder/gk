@@ -27,6 +27,7 @@ function md(e){
     else if(c.nodeType===1){
       if(isCode(c)){o+='\n'+codeMd(c)+'\n';}
       else if(c.tagName==='BR'){o+='\n';}
+      else if(/^(BUTTON|SVG|SCRIPT|STYLE|TEXTAREA|FORM|NAV)$/i.test(c.tagName)){}
       else if(/^(P|DIV|UL|OL|LI|H[1-6]|BLOCKQUOTE|TABLE|TR|PRE)$/.test(c.tagName)){o+='\n'+md(c)+'\n';}
       else{o+=md(c);}
     }}
@@ -55,6 +56,27 @@ function findMarker(mk){
   while((n=w.nextNode())){if(validMarkerNode(n)&&n.nodeValue.indexOf(mk)>=0){found=n;break;}}
   window.__agMN=found;
   return found;
+}
+function sibText(el){
+  if(!el||!el.tagName||/^(BUTTON|SVG|SCRIPT|STYLE|TEXTAREA|FORM|NAV)$/i.test(el.tagName)){return '';}
+  return tidy(md(el));
+}
+// 마커가 있는 "내 메시지" 컨테이너의 뒤쪽 형제들 = 답변 (클래스/구조 가정 없음)
+function afterByStructure(m,mk){
+  var a=m.parentElement;
+  for(var lvl=0;a&&a!==document.body&&lvl<10;lvl++,a=a.parentElement){
+    var sib=a.nextElementSibling;var out=[];
+    while(sib){var t=sibText(sib);if(t&&t.indexOf(mk)<0){out.push(t);}sib=sib.nextElementSibling;}
+    if(out.length){return out.join('\n\n');}
+  }
+  return '';
+}
+function own(e){var t='';for(var i=0;i<e.childNodes.length;i++){if(e.childNodes[i].nodeType===3){t+=e.childNodes[i].nodeValue;}}return norm(t).slice(0,40);}
+function dump(e,d,out){
+  if(out.length>70||d>6){return;}
+  var cls=((e.getAttribute('class')||'').split(/\s+/).slice(0,2).join('.'));
+  out.push(new Array(d+1).join(' ')+e.tagName.toLowerCase()+(cls?'.'+cls:'')+(isCode(e)?'[code]':'')+' "'+own(e)+'"');
+  for(var i=0;i<e.children.length;i++){dump(e.children[i],d+1,out);}
 }
 function generating(){
   if(document.querySelector('form button[aria-label*="stop" i]')){return true;}
@@ -99,7 +121,8 @@ return {
       for(var z=0;z<s.length;z++){
         if(m.compareDocumentPosition(s[z])&4){var t0=tidy(md(s[z]));if(t0&&t0.indexOf(mk)<0){A0.push(t0);}}
       }
-      return JSON.stringify({g:generating(),f:1,a:A0.join('\n\n'),c:''});
+      var S0=A0.length?'':afterByStructure(m,mk);
+      return JSON.stringify({g:generating(),f:1,a:A0.join('\n\n'),s:S0,c:''});
     }
     var bc={};var src=window.__agB||{};for(var key in src){bc[key]=src[key];}
     var pn=window.__agPN||'';var A=[];var C=[];
@@ -129,7 +152,11 @@ return {
     return JSON.stringify({g:generating(),t:out.join('\n\n'),f:0});
   },
   debug:function(mk){
-    return JSON.stringify({segs:segs().length,marker:!!findMarker(mk),gen:generating(),composer:!!document.querySelector(TA),url:location.href});
+    var m=findMarker(mk);var out=[];
+    var base=m?m.parentElement:null;
+    if(base){for(var i=0;i<3&&base.parentElement&&base.parentElement!==document.body;i++){base=base.parentElement;}}
+    dump(base&&base.parentElement?base.parentElement:(document.querySelector('#chat-area')||document.body),0,out);
+    return JSON.stringify({segs:segs().length,marker:!!m,gen:generating(),composer:!!document.querySelector(TA),outline:out.join('\n')});
   },
   // 내가 보낸 메시지 끝의 마커 "뒤"에 위치한 조각만 = 어시스턴트 답변
   snapshotAfter:function(mk){
