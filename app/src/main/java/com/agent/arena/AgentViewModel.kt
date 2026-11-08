@@ -133,7 +133,7 @@ class AgentViewModel : ViewModel() {
                     }
                 }
                 if (raw.isBlank()) {
-                    finish(idx, "LMArena 응답을 받지 못했습니다. (시간 초과 또는 사이트 오류)\n진단: ${ctl.debug(ticket)}", true); return
+                    finish(idx, "LMArena 응답을 받지 못했습니다. (시간 초과 또는 사이트 오류)\n길게 눌러 아래 진단을 복사해 전달해 주세요.\n${ctl.debug(ticket)}", true); return
                 }
 
                 val parsed = WorkParser.parse(raw)
