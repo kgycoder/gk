@@ -121,8 +121,8 @@ return {
       for(var z=0;z<s.length;z++){
         if(m.compareDocumentPosition(s[z])&4){var t0=tidy(md(s[z]));if(t0&&t0.indexOf(mk)<0){A0.push(t0);}}
       }
-      var S0=A0.length?'':afterByStructure(m,mk);
-      return JSON.stringify({g:generating(),f:1,a:A0.join('\n\n'),s:S0,c:''});
+      // 마커 뒤 조각이 있으면 빠른 경로. 비어 있으면(마커가 답변 뒤쪽에 있는 경우 등) 아래 폴백 계산으로 계속 진행
+      if(A0.length){return JSON.stringify({g:generating(),f:1,a:A0.join('\n\n'),s:'',c:''});}
     }
     var bc={};var src=window.__agB||{};for(var key in src){bc[key]=src[key];}
     var pn=window.__agPN||'';var A=[];var C=[];
@@ -137,7 +137,7 @@ return {
       C.push(t);
       if(m&&(m.compareDocumentPosition(e)&4)){A.push(t);}
     }
-    return JSON.stringify({g:generating(),f:m?1:0,a:A.join('\n\n'),c:C.join('\n\n')});
+    return JSON.stringify({g:generating(),f:m?1:0,a:A.join('\n\n'),s:(m&&!C.length)?afterByStructure(m,mk):'',c:C.join('\n\n')});
   },
   // 폴백: baseline 이후 조각 중 "내가 보낸 텍스트의 일부"인 것을 제외
   snapshotFallback:function(base){
