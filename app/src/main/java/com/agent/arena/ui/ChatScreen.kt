@@ -227,7 +227,9 @@ private fun MessageItem(m: ChatMessage, p: Palette) {
             m.steps.forEach { StepLine(it, p, pulsing = false) }
             if (m.planning) StepLine("작업 계획 중…", p, pulsing = true)
             if (m.text.isNotBlank()) {
-                BasicText(m.text, style = TextStyle(color = if (m.isError) p.error else p.text, fontSize = 16.sp, lineHeight = 24.sp))
+                androidx.compose.foundation.text.selection.SelectionContainer {
+                    BasicText(m.text, style = TextStyle(color = if (m.isError) p.error else p.text, fontSize = if (m.isError) 12.sp else 16.sp, lineHeight = if (m.isError) 17.sp else 24.sp))
+                }
             } else if (m.streaming && !m.planning) {
                 PulseDot(p)
             }
