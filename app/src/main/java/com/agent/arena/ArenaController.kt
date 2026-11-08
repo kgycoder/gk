@@ -270,9 +270,12 @@ class ArenaController(private val ctx: Context) {
             val gen = o.optBoolean("g")
             // 마커 뒤 조각을 우선 사용. 없으면 6초 후부터 "전송 전에 없던 조각" 전체를 사용
             val fromMarker = o.optString("a")
+            val elapsed = System.currentTimeMillis() - start
+            val structural = o.optString("s")
             val text = when {
                 fromMarker.isNotBlank() -> fromMarker
-                System.currentTimeMillis() - start > 6_000 -> o.optString("c")
+                structural.isNotBlank() && (gen || elapsed > 4_000) -> structural   // 클래스 비의존 폴백
+                elapsed > 6_000 -> o.optString("c")
                 else -> ""
             }
             if (gen) sawGenerating = true
